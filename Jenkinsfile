@@ -16,12 +16,17 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                // 'SonarQube-Server' must match the name you set in Manage Jenkins -> System
-                withSonarQubeEnv('SonarQube-Server') {
-                    sh "sonar-scanner \
-                    -Dsonar.projectKey=mayavi-project \
-                    -Dsonar.sources=. \
-                    -Dsonar.python.version=3"
+                script {
+                    // 1. Specify the installation path of the tool
+                    def scannerHome = tool 'sonar-scanner'
+                    
+                    // 2. Use this path to execute the scan command
+                    withSonarQubeEnv('SonarQube-Server') {
+                        sh "${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=mayavi-project \
+                        -Dsonar.sources=. \
+                        -Dsonar.python.version=3"
+                    }
                 }
             }
         }
