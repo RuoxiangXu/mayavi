@@ -3,7 +3,7 @@ pipeline {
     
     tools {
         // The name here must match the name you set for the SonarQube Scanner in Manage Jenkins -> Tools.
-        scannerHome 'sonar-scanner'
+        'hudson.plugins.sonar.SonarRunnerInstallation' 'sonar-scanner'
     }
 
     stages {
@@ -16,9 +16,9 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                // The name here must match the SonarQube Server name you set in Manage Jenkins -> System
+                // 'SonarQube-Server' must match the name you set in Manage Jenkins -> System
                 withSonarQubeEnv('SonarQube-Server') {
-                    sh "${scannerHome}/bin/sonar-scanner \
+                    sh "sonar-scanner \
                     -Dsonar.projectKey=mayavi-project \
                     -Dsonar.sources=. \
                     -Dsonar.python.version=3"
