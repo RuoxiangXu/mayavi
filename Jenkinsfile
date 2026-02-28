@@ -54,7 +54,7 @@ pipeline {
                             sh "gcloud auth activate-service-account --key-file=${GCP_AUTH_KEY}"
                             
                             echo "Uploading code to teammate's bucket..."
-                            sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
+                            sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/mayavi/"
                         }
                     }
                 }
