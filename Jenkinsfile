@@ -46,11 +46,16 @@ pipeline {
                 expression { return true } 
             }
             steps {
-                // Use container('name') to switch running environments
                 container('gcloud') {
-                    script {
-                        echo "Running gsutil inside the gcloud container..."
-                        sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
+                    withCredentials([file(credentialsId: 'gcs-upload-key', variable: 'GCP_AUTH_KEY')]) {
+                        script {
+                            echo "Activating Service Account with JSON Key to bypass Node Scopes..."
+                            
+                            sh "gcloud auth activate-service-account --key-file=${GCP_AUTH_KEY}"
+                            
+                            echo "Uploading code to teammate's bucket..."
+                            sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
+                        }
                     }
                 }
             }
