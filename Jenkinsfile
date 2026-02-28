@@ -51,7 +51,7 @@ pipeline {
                     
                     // -m indicates multithreading acceleration, cp -r indicates recursive copying of all files in the current directory
                     // Here, the GCS path provided by the teammate is used.
-                    sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
+                    sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/mayavi/"
                     
                     echo "Code successfully pushed to GCS. Ready for teammate's Hadoop job."
                 }
