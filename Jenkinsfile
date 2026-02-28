@@ -46,8 +46,15 @@ pipeline {
                 expression { return true } 
             }
             steps {
-                echo "Quality Gate passed! Ready to trigger Hadoop job..."
-                // TODO: This is where the next step of coordination with teammates will take place.
+                script {
+                    echo "Quality Gate passed! Uploading code to teammate's GCS bucket..."
+                    
+                    // -m indicates multithreading acceleration, cp -r indicates recursive copying of all files in the current directory
+                    // Here, the GCS path provided by the teammate is used.
+                    sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
+                    
+                    echo "Code successfully pushed to GCS. Ready for teammate's Hadoop job."
+                }
             }
         }
     }
