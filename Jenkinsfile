@@ -46,15 +46,12 @@ pipeline {
                 expression { return true } 
             }
             steps {
-                script {
-                    echo "Quality Gate passed! Uploading code to teammate's GCS bucket..."
-                    
-                    // Check if gsutil is already installed, and install a lightweight version if not.
-                    sh "if ! command -v gsutil &> /dev/null; then curl -sSL https://sdk.cloud.google.com | bash; fi"
-                    def gsutil = "/home/jenkins/google-cloud-sdk/bin/gsutil"
-                    sh "${gsutil} -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
-                    
-                    echo "Code successfully pushed to GCS. Ready for teammate's Hadoop job."
+                // Use container('name') to switch running environments
+                container('gcloud') {
+                    script {
+                        echo "Running gsutil inside the gcloud container..."
+                        sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
+                    }
                 }
             }
         }
