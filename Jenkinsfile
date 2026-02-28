@@ -49,9 +49,10 @@ pipeline {
                 script {
                     echo "Quality Gate passed! Uploading code to teammate's GCS bucket..."
                     
-                    // -m indicates multithreading acceleration, cp -r indicates recursive copying of all files in the current directory
-                    // Here, the GCS path provided by the teammate is used.
-                    sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/mayavi/"
+                    // Check if gsutil is already installed, and install a lightweight version if not.
+                    sh "if ! command -v gsutil &> /dev/null; then curl -sSL https://sdk.cloud.google.com | bash; fi"
+                    def gsutil = "/home/jenkins/google-cloud-sdk/bin/gsutil"
+                    sh "${gsutil} -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/"
                     
                     echo "Code successfully pushed to GCS. Ready for teammate's Hadoop job."
                 }
