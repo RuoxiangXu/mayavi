@@ -68,7 +68,7 @@ spec:
                                   --cluster=hadoop-cluster \
                                   --region=us-central1 \
                                   --project=cmu-14848-485621 \
-                                  --jar=file:///usr/lib/hadoop-mapreduce/hadoop-streaming.jar \
+                                  --jar=file:///usr/lib/hadoop/hadoop-streaming.jar \
                                   -- \
                                   -files gs://hadoop-data-cmu-14848-485621/scripts/mapper.py,gs://hadoop-data-cmu-14848-485621/scripts/reducer.py \
                                   -mapper "python3 mapper.py" \
