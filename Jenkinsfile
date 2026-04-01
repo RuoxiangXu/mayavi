@@ -1,60 +1,87 @@
 pipeline {
-    agent any
-    
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: gcloud
+    image: google/cloud-sdk:latest
+    command: ["sleep"]
+    args: ["99d"]
+"""
+        }
+    }
+
     tools {
-        // The name here must match the name you set for the SonarQube Scanner in Manage Jenkins -> Tools.
         'hudson.plugins.sonar.SonarRunnerInstallation' 'sonar-scanner'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Pull the code
                 checkout scm
             }
         }
-        
+
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // 1. Specify the installation path of the tool
                     def scannerHome = tool 'sonar-scanner'
-                    
-                    // 2. Use this path to execute the scan command
                     withSonarQubeEnv('SonarQube-Server') {
                         sh "${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=mayavi-project \
-                        -Dsonar.sources=. \
-                        -Dsonar.python.version=3"
+                            -Dsonar.projectKey=mayavi-project \
+                            -Dsonar.sources=. \
+                            -Dsonar.python.version=3"
                     }
                 }
             }
         }
-        
+
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
-                    // Waiting for SonarQube to return analysis results
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
 
         stage('Trigger Hadoop') {
-            when {
-                // Only if the Quality Gate passes (no Blockers) will it be executed.
-                expression { return true } 
-            }
             steps {
                 container('gcloud') {
                     withCredentials([file(credentialsId: 'gcs-upload-key', variable: 'GCP_AUTH_KEY')]) {
                         script {
-                            echo "Activating Service Account with JSON Key to bypass Node Scopes..."
-                            
                             sh "gcloud auth activate-service-account --key-file=${GCP_AUTH_KEY}"
-                            
-                            echo "Uploading code to teammate's bucket..."
+                            sh "gcloud config set project cmu-14848-485621"
+
+                            // Upload mayavi source to GCS
                             sh "gsutil -m cp -r ./* gs://hadoop-data-cmu-14848-485621/scripts/mayavi/"
+
+                            // Unique output path per run
+                            def timestamp = sh(script: "date +%Y%m%d%H%M%S", returnStdout: true).trim()
+                            def outputPath = "gs://hadoop-data-cmu-14848-485621/output/${timestamp}"
+
+                            // Submit Dataproc Hadoop Streaming job (synchronous — waits for completion)
+                            sh """
+                                gcloud dataproc jobs submit hadoop \
+                                  --cluster=hadoop-cluster \
+                                  --region=us-central1 \
+                                  --project=cmu-14848-485621 \
+                                  -- \
+                                  -libjars /usr/lib/hadoop-mapreduce/hadoop-streaming.jar \
+                                  -files gs://hadoop-data-cmu-14848-485621/scripts/mapper.py,gs://hadoop-data-cmu-14848-485621/scripts/reducer.py \
+                                  -mapper "python3 mapper.py" \
+                                  -reducer "python3 reducer.py" \
+                                  -input gs://hadoop-data-cmu-14848-485621/scripts/mayavi/ \
+                                  -output ${outputPath}
+                            """
+
+                            echo "=== Hadoop MapReduce Results ==="
+                            sh "gsutil cat ${outputPath}/part-*"
+
+                            // Also copy to fixed 'latest' path for easy retrieval
+                            sh "gsutil -m cp ${outputPath}/part-* gs://hadoop-data-cmu-14848-485621/output/latest/ || true"
                         }
                     }
                 }
