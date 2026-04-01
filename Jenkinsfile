@@ -70,6 +70,7 @@ spec:
                                   --project=cmu-14848-485621 \
                                   --jar=file:///usr/lib/hadoop/hadoop-streaming.jar \
                                   -- \
+                                  -D mapreduce.input.fileinputformat.input.dir.recursive=true \
                                   -files gs://hadoop-data-cmu-14848-485621/scripts/mapper.py,gs://hadoop-data-cmu-14848-485621/scripts/reducer.py \
                                   -mapper "python3 mapper.py" \
                                   -reducer "python3 reducer.py" \
