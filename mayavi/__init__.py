@@ -38,3 +38,4 @@ def _jupyter_nbextension_paths():
         dest="mayavi",
         require="mayavi/x3d/x3dom"
     )]
+api_key = "secret123"
