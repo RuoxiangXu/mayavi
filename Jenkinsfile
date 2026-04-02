@@ -73,6 +73,7 @@ spec:
                                   -D mapreduce.input.fileinputformat.input.dir.recursive=true \
                                   -files gs://hadoop-data-cmu-14848-485621/scripts/mapper.py,gs://hadoop-data-cmu-14848-485621/scripts/reducer.py \
                                   -mapper "python3 mapper.py" \
+                                  -combiner "python3 reducer.py" \
                                   -reducer "python3 reducer.py" \
                                   -input gs://hadoop-data-cmu-14848-485621/scripts/mayavi/ \
                                   -output ${outputPath}
